@@ -5,7 +5,7 @@
 
 int servo_count = 0;
 int servo_max = 150;
-int servo_point = 30;
+int servo_point = 16;
 
 int light_count = 0;
 int light_max = 150;
@@ -14,7 +14,8 @@ int light_point = 30;
 unsigned int current_state = 0;
 unsigned int next_state = 0;
 unsigned int state_count = 0;
-unsigned int state_max = 313;
+unsigned int state_point = 20;
+unsigned int state_max = 50; //5 seconds
 
 long map(long x, long in_min, long in_max, long out_min, long out_max)
 {
@@ -73,8 +74,8 @@ int adc_read(int select)
     ADMUX &= ~(MASK<<MUX3);
   }
 
-	// start single conversion write ’1' to ADSC
-  // wait for conversion to complete ADSC becomes ’0' again till then, run loop continuously
+	// start single conversion write â€™1' to ADSC
+  // wait for conversion to complete ADSC becomes â€™0' again till then, run loop continuously
   ADCSRA |= (1<<ADSC);
   while (ADCSRA & (1 << ADSC));
   adc_result = ADCH;
@@ -121,6 +122,7 @@ ISR(TIMER0_OVF_vect)
     	PORTD &= ~(MASK<<PD2);
       	servo_count = 0;
   	}
+  /*
   	//update headlight power
   	light_count++;
 	if (light_count >= light_point && light_count < light_max){
@@ -129,31 +131,40 @@ ISR(TIMER0_OVF_vect)
     	PORTD &= ~(MASK<<PD3);
       	light_count = 0;
   	}
+  
   	//update headlight state
   	if (current_state != next_state)
-    {
+    {	
       	state_count++;
+
       	if (state_count >= state_max){
+
  			current_state = next_state; 
           	state_count = 0;
-  		}
+        }
 
     }
+	set_light_mode();
+    */
+  	
   	set_timer();
 }
 //determine if speed is in range for state transition
 void determine_state(unsigned int speed)
 {
-  	if (speed < 50 && current_state != 1)
+  	if (speed < 50 && next_state != 1)
     {
+      	Serial.println("state 1 started");
       	next_state = 1;
       	state_count = 0;
-    }else if (speed >= 50 && speed < 100)
+    }else if (speed >= 50 && speed < 100 && next_state != 2)
     {
+      Serial.println("state 2 started");
       	next_state = 2;
       	state_count = 0;
-    }else if (speed > 100 && state != 3)
+    }else if (speed > 100 && next_state != 3)
     {
+      Serial.println("state 3 started");
       	next_state = 3;
       	state_count = 0;
     }
@@ -162,7 +173,16 @@ void set_light_mode()
 {
   if (current_state == 0)
   {
-    light_point = 0;'
+    light_point = 250;
+  }else if (current_state == 1)
+  {
+    light_point = 40;
+  }else if (current_state == 2)
+  {
+    light_point = 80;
+  }else if (current_state == 3)
+  {
+    light_point = 140;
   }
 }
 int main()
@@ -176,14 +196,14 @@ int main()
   while(1)
   {
 	int steering_angle = adc_read(0);
-	int speed = adc_read(1);
-   	servo_point = map(steering_angle,0,1023,0,118);
+	//int speed = adc_read(1);
+   	servo_point = map(steering_angle,0,1023,0,116);
     //light_point = map(speed,0,1023,0,118);
-	
-    set_light_mode();
+	//determine_state(speed);
+    Serial.println(servo_point);
     
-    Serial.println(speed);
-    Serial.println(steering_angle);
+    //Serial.println(speed);
+    //Serial.println(steering_angle);
   }
   return 0;
 }
