@@ -5,7 +5,7 @@
 
 int servo_count = 0;
 int servo_max = 150;
-int servo_point = 16;
+int servo_point = 60;
 
 int light_count = 0;
 int light_max = 150;
@@ -122,7 +122,7 @@ ISR(TIMER0_OVF_vect)
     	PORTD &= ~(MASK<<PD2);
       	servo_count = 0;
   	}
-  /*
+  
   	//update headlight power
   	light_count++;
 	if (light_count >= light_point && light_count < light_max){
@@ -144,9 +144,7 @@ ISR(TIMER0_OVF_vect)
         }
 
     }
-	set_light_mode();
-    */
-  	
+      	
   	set_timer();
 }
 //determine if speed is in range for state transition
@@ -196,14 +194,14 @@ int main()
   while(1)
   {
 	int steering_angle = adc_read(0);
-	//int speed = adc_read(1);
-   	servo_point = map(steering_angle,0,1023,0,116);
+	int speed = adc_read(1);
+   	servo_point = map(steering_angle,0,1023,30,84);
     //light_point = map(speed,0,1023,0,118);
-	//determine_state(speed);
-    Serial.println(servo_point);
-    
-    //Serial.println(speed);
-    //Serial.println(steering_angle);
+	determine_state(speed);
+    //Serial.println((double)servo_point/(double)servo_max);
+    set_light_mode();
+    Serial.println(current_state);
+    //Serial.println(servo_point);
   }
   return 0;
 }
