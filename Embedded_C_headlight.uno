@@ -14,9 +14,9 @@ int light_point = 30;
 
 unsigned int current_state = 0;
 unsigned int next_state = 0;
-unsigned int state_count = 0;
-unsigned int state_point = 20;
-unsigned int state_max = 50; //5 seconds
+unsigned long state_count = 0;
+
+unsigned long state_max = 312500; //5 seconds
 
 long map(long x, long in_min, long in_max, long out_min, long out_max)
 {
@@ -140,7 +140,7 @@ ISR(TIMER0_OVF_vect)
       	state_count++;
 
       	if (state_count >= state_max){
-
+			Serial.println("state changed");
  			current_state = next_state; 
           	state_count = 0;
         }
@@ -152,6 +152,10 @@ ISR(TIMER0_OVF_vect)
 //determine if speed is in range for state transition
 void determine_state(unsigned int speed)
 {
+  	if (current_state == 0){
+    	current_state = 1;
+  		next_state = 1;
+    }
   	if (speed < 50 && next_state != 1)
     {
       	Serial.println("state 1 started");
@@ -176,7 +180,7 @@ void set_light_mode()
     light_point = 250;
   }else if (current_state == 1)
   {
-    light_point = 149;
+    light_point = 120;
   }else if (current_state == 2)
   {
     light_point = 100;
@@ -234,7 +238,7 @@ int main()
     
     //Serial.println((double)servo_point/(double)servo_max);
    
-    Serial.println(current_state);
+    //Serial.println(current_state);
     //Serial.println(servo_point);
   }
   return 0;
