@@ -2,7 +2,8 @@
 #include <util/delay.h>
 
 #define MASK 1
-
+int RightRange = 0;
+int LeftRange = 0;
 int servo_count = 0;
 int servo_max = 150;
 int servo_point = 60;
@@ -117,6 +118,7 @@ ISR(TIMER0_OVF_vect)
   	//update headlight servo angle
 	servo_count++;
 	if (servo_count >= servo_point && servo_count < servo_max){
+      
  		PORTD |= (MASK<<PD2);
   	}else if (servo_count >= servo_max){
     	PORTD &= ~(MASK<<PD2);
@@ -174,14 +176,36 @@ void set_light_mode()
     light_point = 250;
   }else if (current_state == 1)
   {
-    light_point = 40;
+    light_point = 149;
   }else if (current_state == 2)
   {
-    light_point = 80;
+    light_point = 100;
   }else if (current_state == 3)
   {
-    light_point = 140;
+    light_point = 80;
   }
+}
+void setRange()
+{
+   int center = 57;
+  if (current_state == 1)
+  {
+   
+    int offset = 8;
+    LeftRange = center - offset;
+    RightRange = center + offset;
+  }else if (current_state == 2 || current_state == 3)
+  {
+      
+    int offset = 8;
+    LeftRange = center - offset;
+    RightRange = center + 2*offset;
+  }else{
+    int offset = 0;
+    LeftRange = center - offset;
+    RightRange = center + offset;
+  }
+    
 }
 int main()
 {
@@ -195,11 +219,21 @@ int main()
   {
 	int steering_angle = adc_read(0);
 	int speed = adc_read(1);
-   	servo_point = map(steering_angle,0,1023,30,84);
+ 	
+    setRange();
+    
+   	servo_point = map(steering_angle,0,1023,LeftRange,RightRange);
     //light_point = map(speed,0,1023,0,118);
+    
+    //convert potentiometer reading into speed KMph
+    speed = map(speed,0,1023,0,400);
+    
+    
 	determine_state(speed);
-    //Serial.println((double)servo_point/(double)servo_max);
     set_light_mode();
+    
+    //Serial.println((double)servo_point/(double)servo_max);
+   
     Serial.println(current_state);
     //Serial.println(servo_point);
   }
